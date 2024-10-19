@@ -1,6 +1,9 @@
 -- You can also add or configure plugins by creating files in this `plugins/` folder
 -- Here are some examples:
 
+-- Enable bidirectional clipboard.
+vim.api.nvim_set_option_value("clipboard", "unnamedplus", { "global" })
+
 ---@type LazySpec
 return {
 
