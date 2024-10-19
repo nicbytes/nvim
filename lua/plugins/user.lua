@@ -2,7 +2,7 @@
 -- Here are some examples:
 
 -- Enable bidirectional clipboard.
-vim.api.nvim_set_option_value("clipboard", "unnamedplus", { "global" })
+vim.opt.clipboard = "unnamedplus"
 
 ---@type LazySpec
 return {
