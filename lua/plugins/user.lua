@@ -265,11 +265,11 @@ return {
     "akinsho/git-conflict.nvim",
     version = "*",
     opts = {
-      default_mappings = false, -- disable buffer local mapping created by this plugin
-      default_commands = true, -- disable commands created by this plugin
+      default_mappings = false,    -- disable buffer local mapping created by this plugin
+      default_commands = true,     -- disable commands created by this plugin
       disable_diagnostics = false, -- This will disable the diagnostics in a buffer whilst it is conflicted
-      list_opener = "copen", -- command or function to open the conflicts list
-      highlights = { -- They must have background color, otherwise the default color will be used
+      list_opener = "copen",       -- command or function to open the conflicts list
+      highlights = {               -- They must have background color, otherwise the default color will be used
         incoming = "DiffAdd",
         current = "DiffText",
       },
@@ -278,82 +278,20 @@ return {
       require("git-conflict").setup(plugin.opts)
       local wk = require "which-key"
       wk.add {
-        { "<leader>gr", desc = "Git Conflict", group = true },
-        { "<leader>gro", "<cmd>GitConflictChooseOurs<cr>", desc = "Choose Ours" }, -- Select the current changes
-        { "<leader>grt", "<cmd>GitConflictChooseTheirs<cr>", desc = "Choose Theirs" }, -- Select the incoming changes
-        { "<leader>grb", "<cmd>GitConflictChooseBoth<cr>", desc = "Choose Both" }, -- Select both changes
-        { "<leader>gr0", "<cmd>GitConflictChooseNone<cr>", desc = "Choose None" }, -- Select none of the changes
-        { "<leader>grn", "<cmd>GitConflictNextConflict<cr>", desc = "Next Conflict" }, -- Move to the next conflict
+        { "<leader>gr",  desc = "Git Conflict",              group = true },
+        { "<leader>gro", "<cmd>GitConflictChooseOurs<cr>",   desc = "Choose Ours" },       -- Select the current changes
+        { "<leader>grt", "<cmd>GitConflictChooseTheirs<cr>", desc = "Choose Theirs" },     -- Select the incoming changes
+        { "<leader>grb", "<cmd>GitConflictChooseBoth<cr>",   desc = "Choose Both" },       -- Select both changes
+        { "<leader>gr0", "<cmd>GitConflictChooseNone<cr>",   desc = "Choose None" },       -- Select none of the changes
+        { "<leader>grn", "<cmd>GitConflictNextConflict<cr>", desc = "Next Conflict" },     -- Move to the next conflict
         { "<leader>grp", "<cmd>GitConflictPrevConflict<cr>", desc = "Previous Conflict" }, -- Move to the previous conflict
-        { "<leader>grl", "<cmd>GitConflictListQf<cr>", desc = "List Conflicts" }, -- Get all conflicts to quickfix
+        { "<leader>grl", "<cmd>GitConflictListQf<cr>",       desc = "List Conflicts" },    -- Get all conflicts to quickfix
       }
     end,
     -- config = true,
   },
 
-  -- AI editor chat.
-  -- {
-  --   "yetone/avante.nvim",
-  --   event = "VeryLazy",
-  --   lazy = false,
-  --   version = false, -- set this if you want to always pull the latest change
-  --   opts = {
-  --     provider = "claude",
-  --     claude = {
-  --       api_key_name = { "cat", os.getenv "HOME" .. "/.api_key_anthropic" },
-  --     },
-  --   },
-  --   keys = {
-  --     -- { "<leader>a", desc = "󰚩 A.I." },
-  --     { "<leader>a", mode = "n", desc = "󰚩 A.I." },
-  --   },
-  --   -- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
-  --   build = "make",
-  --   -- build = "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false" -- for windows
-  --   dependencies = {
-  --     "stevearc/dressing.nvim",
-  --     "nvim-lua/plenary.nvim",
-  --     "MunifTanjim/nui.nvim",
-  --     --- The below dependencies are optional,
-  --     "hrsh7th/nvim-cmp",            -- autocompletion for avante commands and mentions
-  --     "nvim-tree/nvim-web-devicons", -- or echasnovski/mini.icons
-  --     -- "zbirenbaum/copilot.lua", -- for providers='copilot'
-  --     {
-  --       -- support for image pasting
-  --       "HakonHarnes/img-clip.nvim",
-  --       event = "VeryLazy",
-  --       opts = {
-  --         -- recommended settings
-  --         default = {
-  --           embed_image_as_base64 = false,
-  --           prompt_for_file_name = false,
-  --           drag_and_drop = {
-  --             insert_mode = true,
-  --           },
-  --           -- required for Windows users
-  --           use_absolute_path = true,
-  --         },
-  --       },
-  --     },
-  --     {
-  --       -- Make sure to set this up properly if you have lazy=true
-  --       "MeanderingProgrammer/render-markdown.nvim",
-  --       opts = {
-  --         file_types = { "markdown", "Avante" },
-  --       },
-  --       ft = { "markdown", "Avante" },
-  --     },
-  --   },
-  --
-  --   -- config = function(plugin)
-  --   --   require("avante").setup(plugin.opts)
-  --   --   local wk = require "which-key"
-  --   --   wk.add {
-  --   --     { "<leader>a", mode = "n", desc = "󰚩 A.I." },
-  --   --   }
-  --   -- end,
-  -- },
-
+  -- Center on searched items.
   {
     "nvim-telescope/telescope.nvim",
     keys = {
