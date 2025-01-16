@@ -5,8 +5,10 @@
 ---@type LazySpec
 return {
   "AstroNvim/astrocommunity",
+  { import = "astrocommunity.completion.blink-cmp" },
   { import = "astrocommunity.editing-support.telescope-undo-nvim" },
   { import = "astrocommunity.editing-support.undotree" },
+  { import = "astrocommunity.file-explorer.oil-nvim" },
   { import = "astrocommunity.pack.bash" },
   { import = "astrocommunity.pack.cmake" },
   { import = "astrocommunity.pack.cpp" },
@@ -15,9 +17,10 @@ return {
   { import = "astrocommunity.pack.json" },
   { import = "astrocommunity.pack.lua" },
   { import = "astrocommunity.pack.markdown" },
+  { import = "astrocommunity.pack.mdx" },
   { import = "astrocommunity.pack.python" },
+  { import = "astrocommunity.pack.rainbow-delimiter-indent-blankline" },
   { import = "astrocommunity.pack.rust" },
-  { import = "astrocommunity.pack.svelte" },
   { import = "astrocommunity.pack.tailwindcss" },
   { import = "astrocommunity.pack.typescript" },
   { import = "astrocommunity.test.nvim-coverage" },

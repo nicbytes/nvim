@@ -168,17 +168,26 @@ local function parse_ansi_to_highlights(str)
   return lines, highlights
 end
 
+-- Lua debug util: Print given object.
 _G.P = function(v)
   print(vim.inspect(v))
   return v
 end
 
+-- Lua debug util: Reload a module.
 local RELOAD = function(...) return require("plenary.reload").reload_module(...) end
 
+-- Lua debug util: Reload a module (with `R("module-name")`)
 _G.R = function(name)
   RELOAD(name)
   return require(name)
 end
+
+-- State for callbacks to use.
+local state = {
+  -- For showing inline diagnostics.
+  virtual_text = false,
+}
 
 ---@type LazySpec
 return {
@@ -269,7 +278,7 @@ return {
       require("git-conflict").setup(plugin.opts)
       local wk = require "which-key"
       wk.add {
-        { "<leader>gr", desc = "Git Conflict" },
+        { "<leader>gr", desc = "Git Conflict", group = true },
         { "<leader>gro", "<cmd>GitConflictChooseOurs<cr>", desc = "Choose Ours" }, -- Select the current changes
         { "<leader>grt", "<cmd>GitConflictChooseTheirs<cr>", desc = "Choose Theirs" }, -- Select the incoming changes
         { "<leader>grb", "<cmd>GitConflictChooseBoth<cr>", desc = "Choose Both" }, -- Select both changes
@@ -344,4 +353,51 @@ return {
   --   --   }
   --   -- end,
   -- },
+
+  {
+    "nvim-telescope/telescope.nvim",
+    keys = {
+      -- When selecting a search item in telescope, center my buffer on that value.
+      {
+        "<CR>",
+        function()
+          local actions = require "telescope.actions"
+          ---@diagnostic disable-next-line: redundant-return-value
+          return actions.select_default + actions.center
+        end,
+        mode = "i",
+      },
+    },
+  },
+  -- Allow pretty display of LSP diagnostic messages.
+  -- Toggle: <leader>lv
+  -- Useful when there are too many messages overtop of each other.
+  {
+    "https://git.sr.ht/~whynothugo/lsp_lines.nvim",
+    ---@diagnostic disable-next-line: assign-type-mismatch
+    opts = true,
+    config = function()
+      -- Disable virtual_text since it's redundant due to lsp_lines.
+      vim.diagnostic.config {
+        virtual_text = state.virtual_text,
+      }
+      require("lsp_lines").setup()
+    end,
+    lazy = true,
+    keys = {
+      {
+        "<leader>lv",
+        function()
+          require("lsp_lines").toggle()
+
+          state.virtual_text = not state.virtual_text
+          vim.diagnostic.config {
+            virtual_text = state.virtual_text,
+          }
+        end,
+        mode = "n",
+        desc = "LSP Lines toggle",
+      },
+    },
+  },
 }
