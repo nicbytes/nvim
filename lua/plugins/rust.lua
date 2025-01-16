@@ -18,11 +18,6 @@ return {
                 "--no-deps",
               },
             },
-            files = {
-              excludeDirs = {
-                "venv",
-              },
-            },
           },
         },
       },
