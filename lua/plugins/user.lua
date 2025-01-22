@@ -265,11 +265,11 @@ return {
     "akinsho/git-conflict.nvim",
     version = "*",
     opts = {
-      default_mappings = false,    -- disable buffer local mapping created by this plugin
-      default_commands = true,     -- disable commands created by this plugin
+      default_mappings = false, -- disable buffer local mapping created by this plugin
+      default_commands = true, -- disable commands created by this plugin
       disable_diagnostics = false, -- This will disable the diagnostics in a buffer whilst it is conflicted
-      list_opener = "copen",       -- command or function to open the conflicts list
-      highlights = {               -- They must have background color, otherwise the default color will be used
+      list_opener = "copen", -- command or function to open the conflicts list
+      highlights = { -- They must have background color, otherwise the default color will be used
         incoming = "DiffAdd",
         current = "DiffText",
       },
@@ -278,14 +278,14 @@ return {
       require("git-conflict").setup(plugin.opts)
       local wk = require "which-key"
       wk.add {
-        { "<leader>gr",  desc = "Git Conflict",              group = true },
-        { "<leader>gro", "<cmd>GitConflictChooseOurs<cr>",   desc = "Choose Ours" },       -- Select the current changes
-        { "<leader>grt", "<cmd>GitConflictChooseTheirs<cr>", desc = "Choose Theirs" },     -- Select the incoming changes
-        { "<leader>grb", "<cmd>GitConflictChooseBoth<cr>",   desc = "Choose Both" },       -- Select both changes
-        { "<leader>gr0", "<cmd>GitConflictChooseNone<cr>",   desc = "Choose None" },       -- Select none of the changes
-        { "<leader>grn", "<cmd>GitConflictNextConflict<cr>", desc = "Next Conflict" },     -- Move to the next conflict
+        { "<leader>gr", desc = "Git Conflict", group = true },
+        { "<leader>gro", "<cmd>GitConflictChooseOurs<cr>", desc = "Choose Ours" }, -- Select the current changes
+        { "<leader>grt", "<cmd>GitConflictChooseTheirs<cr>", desc = "Choose Theirs" }, -- Select the incoming changes
+        { "<leader>grb", "<cmd>GitConflictChooseBoth<cr>", desc = "Choose Both" }, -- Select both changes
+        { "<leader>gr0", "<cmd>GitConflictChooseNone<cr>", desc = "Choose None" }, -- Select none of the changes
+        { "<leader>grn", "<cmd>GitConflictNextConflict<cr>", desc = "Next Conflict" }, -- Move to the next conflict
         { "<leader>grp", "<cmd>GitConflictPrevConflict<cr>", desc = "Previous Conflict" }, -- Move to the previous conflict
-        { "<leader>grl", "<cmd>GitConflictListQf<cr>",       desc = "List Conflicts" },    -- Get all conflicts to quickfix
+        { "<leader>grl", "<cmd>GitConflictListQf<cr>", desc = "List Conflicts" }, -- Get all conflicts to quickfix
       }
     end,
     -- config = true,
@@ -294,19 +294,23 @@ return {
   -- Center on searched items.
   {
     "nvim-telescope/telescope.nvim",
-    keys = {
-      -- When selecting a search item in telescope, center my buffer on that value.
-      {
-        "<CR>",
-        function()
-          local actions = require "telescope.actions"
-          ---@diagnostic disable-next-line: redundant-return-value
-          return actions.select_default + actions.center
-        end,
-        mode = "i",
+    opts = {
+      defaults = {
+        mappings = {
+          i = {
+            -- When selecting a search item in telescope, center my buffer on that value.
+            ["<CR>"] = function(prompt_bufnr)
+              local actions = require "telescope.actions"
+              ---@diagnostic disable-next-line: redundant-return-value
+              actions.select_default(prompt_bufnr)
+              actions.center(prompt_bufnr)
+            end,
+          },
+        },
       },
     },
   },
+
   -- Allow pretty display of LSP diagnostic messages.
   -- Toggle: <leader>lv
   -- Useful when there are too many messages overtop of each other.
