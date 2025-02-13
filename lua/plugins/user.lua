@@ -197,6 +197,36 @@ return {
     "nvim-lua/plenary.nvim",
   },
 
+  {
+    "mrcjkb/rustaceanvim",
+    dependencies = {
+      -- Using a custom prettifier for LLDB
+      "cmrschwarz/rust-prettifier-for-lldb",
+    },
+    opts = {
+      dap = {
+        -- If you want the minimalistic config, you only need the commented out config below.
+        -- load_rust_types = true,
+        autoload_configurations = true,
+        configuration = function()
+          local configurations = require("dap").configurations.rust
+          configurations = configurations or {}
+          local configuration = configurations[1] or {}
+
+          local lldb_script = vim.fn.stdpath "data" .. "/lazy/rust-prettifier-for-lldb/rust_prettifier_for_lldb.py"
+
+          configuration = vim.tbl_deep_extend(
+            "force",
+            configuration,
+            { initCommands = { 'command script import "' .. lldb_script .. '"' } }
+          )
+
+          return configuration
+        end,
+      },
+    },
+  },
+
   -- {
   --   dir = "~/code/datalinks-ai.nvim",
   --   opts = {
