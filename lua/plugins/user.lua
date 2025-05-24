@@ -1,3 +1,5 @@
+-- if true then return {} end -- WARN: REMOVE THIS LINE TO ACTIVATE THIS FILE
+
 -- Brainfuck Interpreter Function
 local function run_brainfuck_from_string(code)
   local memory = {}
@@ -77,95 +79,12 @@ local brainfuck_code = [[
 >....>>.<<.-----.<<----.<<+.>>>-----------.>+++++.<<<.
 ]]
 
--- Run the Brainfuck program and get the output
-local brainfuck_output = run_brainfuck_from_string(brainfuck_code)
-
--- Function to count the number of captures
-local function countCaptures(str, pattern)
-  local count = 0
-  for _ in str:gmatch(pattern) do
-    count = count + 1
-  end
-  return count
-end
-
--- Function to find the first occurrence of any key in the map
-local function findFirstKey(line, map)
-  local firstKey, firstPos = nil, nil
-
-  -- Iterate over all keys in the map
-  for key, _ in pairs(map) do
-    local startPos = line:find(key, 1, true) -- Find the key in the line (plain search)
-    if startPos and (not firstPos or startPos < firstPos) then
-      -- Update the first key and its position if it's the earliest match
-      firstKey, firstPos = key, startPos
-    end
-  end
-
-  return firstKey, firstPos
-end
-
--- Function to parse ANSI escape sequences and convert to highlight groups
--- Specific to the BF output.
-local function parse_ansi_to_highlights(str)
-  local hl_map = {
-    ["\027[38;2;255;209;102m"] = "Constant",
-    ["\027[38;2;89;159;254m"] = "Directory",
-    ["\027[38;2;121;136;250m"] = "Title",
-    ["\027[38;2;171;178;191m"] = "Normal",
-    ["\027[0m"] = "Normal",
-  }
-  local pattern = "\27%[[^m]*m"
-
-  local lines = {}
-  local highlights = {}
-  local current_hl = "Constant"
-
-  for line in str:gmatch "[^\r\n]+" do
-    local line_highlights = {}
-
-    -- Remove unnecessary 8 leading spaces.
-    if #str > 8 then line = line:sub(8 + 1) end
-
-    local count_color_codes = countCaptures(line, pattern)
-    if count_color_codes == 0 and current_hl then
-      -- use last color highligh no highlights are declared.
-      table.insert(line_highlights, { current_hl, 0, -1 })
-    else
-      local last_col = 0
-      while true do
-        local key, pos = findFirstKey(line, hl_map)
-        local highlight = hl_map[key]
-
-        if not key or not pos then
-          break -- No more keys found, exit the loop
-        elseif not current_hl then
-          -- Not assigned a highlight yet.
-          last_col = pos
-          current_hl = highlight
-        else
-          -- add the last highlight group
-          table.insert(line_highlights, { current_hl, last_col, pos - 1 })
-
-          -- set the next hilight group
-          current_hl = highlight
-          last_col = pos - 1
-        end
-        -- Remove the matched key from the line
-        line = line:sub(1, pos - 1) .. line:sub(pos + #key)
-      end
-      -- add last highlight group for the line.
-      table.insert(line_highlights, { current_hl, last_col, -1 })
-    end
-
-    -- center the graphic.
-    line = line .. "      "
-
-    table.insert(lines, line)
-    if next(line_highlights) ~= nil then table.insert(highlights, line_highlights) end
-  end
-
-  return lines, highlights
+-- Helper function to strip ANSI escape codes
+local function strip_ansi(str)
+  if not str then return "" end
+  -- This pattern matches ANSI escape sequences
+  local clean_str = string.gsub(str, "\27%[[^m]*m", "")
+  return clean_str
 end
 
 -- Lua debug util: Print given object.
@@ -189,12 +108,116 @@ local state = {
   virtual_text = false,
 }
 
+-- Yank full path.
+vim.keymap.set("n", "yP", function()
+  vim.fn.setreg("+", vim.fn.expand "%:p")
+  print "Copied full file path to clipboard!"
+end, { desc = "Copy full file path" })
+
+-- Yank relative path
+vim.keymap.set("n", "yp", function()
+  vim.fn.setreg("+", vim.fn.expand "%")
+  print "Copied relative file path to clipboard!"
+end, { desc = "Copy relative file path" })
+
+-- Yank buffer contents.
+vim.keymap.set("n", "ya", function()
+  -- Get all lines in the current buffer (from start index 0 to the end index -1)
+  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+  -- Concatenate the lines into one string separated by newline characters
+  local contents = table.concat(lines, "\n")
+  -- Set the clipboard register to the contents
+  vim.fn.setreg("+", contents)
+  print "Copied file contents to clipboard!"
+end, { desc = "Copy file contents to clipboard" })
+
+vim.keymap.set("n", "yA", function()
+  -- Get all lines of the current buffer
+  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+  local contents = table.concat(lines, "\n")
+
+  -- Use the buffer's filetype as the language; default to "text"
+  local ft = vim.bo.filetype
+  if ft == "" then ft = "text" end
+
+  -- Find the longest sequence of backticks in the content
+  local max_backticks = 2
+  for backticks in contents:gmatch "(`+)" do
+    local len = #backticks
+    if len > max_backticks then max_backticks = len end
+  end
+
+  -- Create a fence that is one backtick longer than the max found
+  local fence = string.rep("`", max_backticks + 1)
+
+  -- Construct the markdown wrapped content: fence + language marker, newline,
+  -- file contents, newline, then the same fence.
+  local wrapped = fence .. ft .. "\n" .. contents .. "\n" .. fence
+
+  -- Set the constructed string into the system clipboard register
+  vim.fn.setreg("+", wrapped)
+  print "Copied file contents as a Markdown code block to clipboard!"
+end, { desc = "Copy file contents wrapped in a Markdown code block" })
+
 ---@type LazySpec
 return {
   -- { dir = "~/code/datalinks-ai.nvim" },
 
   {
-    "nvim-lua/plenary.nvim",
+    "folke/snacks.nvim",
+    opts = function(_, opts)
+      -- 1. Run the Brainfuck program
+      local raw_brainfuck_output = run_brainfuck_from_string(brainfuck_code)
+
+      -- 2. Pre-process the output and calculate widths
+      local processed_lines_for_display = {} -- With ANSI, for printf
+      local header_height = 0
+      local art_width = 0
+
+      for line_with_ansi in raw_brainfuck_output:gmatch "[^\r\n]+" do
+        local temp_line_for_display = line_with_ansi
+        -- Strip 8 leading characters (original behavior)
+        if #temp_line_for_display > 8 then temp_line_for_display = temp_line_for_display:sub(9) end
+        table.insert(processed_lines_for_display, temp_line_for_display)
+
+        -- For width calculation, strip ANSI from the line that already had leading spaces removed
+        local line_for_calc = strip_ansi(temp_line_for_display)
+        art_width = math.max(art_width, vim.fn.strdisplaywidth(line_for_calc))
+
+        header_height = header_height + 1
+      end
+      local final_header_string_for_snacks = table.concat(processed_lines_for_display, "\n")
+
+      -- Get the dashboard's pane width (snacks default is 60)
+      -- The `opts` argument to this function should contain the merged defaults
+      local dashboard_pane_width = (opts.dashboard and opts.dashboard.width) or 60
+
+      local centered_indent = 0
+      if art_width < dashboard_pane_width then centered_indent = math.floor((dashboard_pane_width - art_width) / 2) end
+      -- If art_width is wider than dashboard_pane_width, it will be left-aligned (indent 0)
+      -- and potentially clipped by the overall dashboard rendering if it's too wide for the screen.
+
+      -- Define how many columns to shift left from center
+      local shift_left_columns = 5 -- Adjust this value as needed
+      local final_indent = math.max(0, centered_indent - shift_left_columns)
+
+      -- 3. Configure snacks dashboard sections
+      opts.dashboard.sections = {
+        {
+          section = "terminal",
+          cmd = { "printf", "%s", final_header_string_for_snacks },
+          height = header_height,
+          width = art_width, -- Set the terminal window width to the art's actual width
+          indent = final_indent, -- Indent the terminal section itself to center it
+          padding = 2, -- Bottom padding for the section
+        },
+        -- Add other sections you want
+        { section = "keys", gap = 1, padding = 1 },
+        { section = "startup" },
+      }
+
+      return opts
+    end,
   },
 
   {
@@ -226,14 +249,6 @@ return {
       },
     },
   },
-
-  -- {
-  --   dir = "~/code/datalinks-ai.nvim",
-  --   opts = {
-  --     debug = true,
-  --   },
-  -- },
-  -- debug = true,
 
   {
     "declancm/cinnamon.nvim",
@@ -274,51 +289,6 @@ return {
         max_height = 32,
       },
     },
-  },
-
-  -- In your alpha-nvim configuration:
-  {
-    "goolord/alpha-nvim",
-    opts = function(_, opts)
-      local lines, highlights = parse_ansi_to_highlights(brainfuck_output)
-      opts.section.header.val = lines
-      opts.section.header.opts = {
-        position = "center",
-        hl = highlights,
-      }
-      return opts
-    end,
-  },
-
-  -- Git Conflict resolving tool
-  {
-    "akinsho/git-conflict.nvim",
-    version = "*",
-    opts = {
-      default_mappings = false, -- disable buffer local mapping created by this plugin
-      default_commands = true, -- disable commands created by this plugin
-      disable_diagnostics = false, -- This will disable the diagnostics in a buffer whilst it is conflicted
-      list_opener = "copen", -- command or function to open the conflicts list
-      highlights = { -- They must have background color, otherwise the default color will be used
-        incoming = "DiffAdd",
-        current = "DiffText",
-      },
-    },
-    config = function(plugin)
-      require("git-conflict").setup(plugin.opts)
-      local wk = require "which-key"
-      wk.add {
-        { "<leader>gr", desc = "Git Conflict", group = true },
-        { "<leader>gro", "<cmd>GitConflictChooseOurs<cr>", desc = "Choose Ours" }, -- Select the current changes
-        { "<leader>grt", "<cmd>GitConflictChooseTheirs<cr>", desc = "Choose Theirs" }, -- Select the incoming changes
-        { "<leader>grb", "<cmd>GitConflictChooseBoth<cr>", desc = "Choose Both" }, -- Select both changes
-        { "<leader>gr0", "<cmd>GitConflictChooseNone<cr>", desc = "Choose None" }, -- Select none of the changes
-        { "<leader>grn", "<cmd>GitConflictNextConflict<cr>", desc = "Next Conflict" }, -- Move to the next conflict
-        { "<leader>grp", "<cmd>GitConflictPrevConflict<cr>", desc = "Previous Conflict" }, -- Move to the previous conflict
-        { "<leader>grl", "<cmd>GitConflictListQf<cr>", desc = "List Conflicts" }, -- Get all conflicts to quickfix
-      }
-    end,
-    -- config = true,
   },
 
   -- Center on searched items.
