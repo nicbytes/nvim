@@ -2,7 +2,7 @@
 return {
   "AstroNvim/astrocommunity",
   { import = "astrocommunity.completion.blink-cmp" },
-  { import = "astrocommunity.completion.avante-nvim" },
+  { import = "astrocommunity.editing-support.codecompanion-nvim" },
   { import = "astrocommunity.editing-support.telescope-undo-nvim" },
   { import = "astrocommunity.editing-support.undotree" },
   { import = "astrocommunity.file-explorer.oil-nvim" },
